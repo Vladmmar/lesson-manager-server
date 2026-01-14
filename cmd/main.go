@@ -1,8 +1,10 @@
 package server
 
 import (
+	"fmt"
 	"lesson-manager-server/internal/app"
 	"lesson-manager-server/internal/config"
+	"net/http"
 )
 
 func main() {
@@ -10,16 +12,26 @@ func main() {
 	cfg := config.MustLoad()
 
 	//init logger
-	slog := app.SetupLogger(cfg)
-	slog.Info("Initialized logger")
+	logging := app.SetupLogger(cfg)
+	logging.Info("Initialized logger")
 
 	//init storage
 	db, err := app.SetupStorage(cfg.Db)
 	if err != nil {
-		slog.Error("Could not connect to database: ", err.Error())
+		logging.Error("Could not connect to database: ", err.Error())
 		return
 	}
 	if err = db.Db.Ping(); err != nil {
-		slog.Error(err.Error())
+		logging.Error(err.Error())
+	}
+
+	//setup http server
+
+	logging.Info(fmt.Sprintf("Starting http server on port %s", cfg.Net.Port))
+	err = http.ListenAndServe(fmt.Sprintf("%s:%s", cfg.Net.Host, cfg.Net.Port), nil)
+	if err != nil {
+		logging.Error(err.Error())
+	} else {
+		logging.Info("Successfully started http server on port %s", cfg.Net.Port)
 	}
 }

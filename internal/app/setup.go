@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"lesson-manager-server/internal/config"
 	"lesson-manager-server/internal/storage"
 	"lesson-manager-server/internal/storage/postgres"
@@ -31,6 +32,10 @@ func SetupStorage(cfg *config.Database) (*storage.Storage, error) {
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if s == nil {
+		return nil, errors.New("storage initialization returned nil")
 	}
 	return s, nil
 }

@@ -18,9 +18,11 @@ func New(cfg *config.Database) (*storage.Storage, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = db.Ping(); err != nil {
-		return nil, err
-	}
+
+	//, err createSql := `
+	//CREATE DATABASE IF NOT
+	//`
+	//	db.Exec()
 
 	return &storage.Storage{Db: db}, nil
 }

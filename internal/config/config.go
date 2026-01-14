@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/ilyakaznacheev/cleanenv"
 	"log"
 	"os"
+
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
@@ -13,6 +14,7 @@ type Config struct {
 }
 
 type Network struct {
+	Host string `yaml:"host" env:"SERVER_HOST" env-default:"localhost"`
 	Port string `yaml:"port" env:"SERVER_PORT" env-default:"8080"`
 }
 
@@ -32,7 +34,7 @@ func MustLoad() *Config {
 	if cfgPath == "" {
 		cfgPath = DEFAULT_CONFIG_PATH
 	}
-	
+
 	var cfg Config
 	if err := cleanenv.ReadConfig(cfgPath, cfg); err != nil {
 		log.Fatalf("cannot read config: %s. %s\n", cfgPath, err)
