@@ -1,5 +1,11 @@
 package config
 
+import (
+	"github.com/ilyakaznacheev/cleanenv"
+	"log"
+	"os"
+)
+
 type Config struct {
 	Env string    ``
 	Net *Network  `yaml:"network"`
@@ -20,3 +26,17 @@ type Database struct {
 }
 
 const DEFAULT_CONFIG_PATH string = "~/lesson-manager/config.json"
+
+func MustLoad() *Config {
+	cfgPath := os.Getenv("CONFIG_PATH")
+	if cfgPath == "" {
+		cfgPath = DEFAULT_CONFIG_PATH
+	}
+	
+	var cfg Config
+	if err := cleanenv.ReadConfig(cfgPath, cfg); err != nil {
+		log.Fatalf("cannot read config: %s. %s\n", cfgPath, err)
+	}
+
+	return &cfg
+}
