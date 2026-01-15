@@ -12,20 +12,23 @@ func main() {
 	fmt.Println("Hello")
 	//load config
 	cfg := config.MustLoad()
+	fmt.Println(cfg.Db)
 
 	//init logger
 	logging := app.SetupLogger(cfg)
 	logging.Info("Initialized logger")
 
 	//init storage
-	db, err := app.SetupStorage(cfg.Db)
+	db, err := app.SetupStorage(&cfg.Db)
 	if err != nil {
 		logging.Error("Could not connect to database: ", err.Error())
 		return
 	}
 	if err = db.Db.Ping(); err != nil {
 		logging.Error(err.Error())
+		return
 	}
+	logging.Info("Successfully established a connection to the database")
 
 	//setup http server
 

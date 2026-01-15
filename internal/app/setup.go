@@ -35,7 +35,7 @@ func SetupStorage(cfg *config.Database) (*storage.Storage, error) {
 	}
 
 	if s == nil {
-		return nil, errors.New("storage initialization returned nil")
+		return nil, errors.New("storage initialization method returned nil")
 	}
 	return s, nil
 }

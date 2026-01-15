@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -8,9 +9,9 @@ import (
 )
 
 type Config struct {
-	Env string    `yaml:"env" env-default:"prod"`
-	Net *Network  `yaml:"network"`
-	Db  *Database `yaml:"database"`
+	Env string   `yaml:"env" env-default:"prod"`
+	Net Network  `yaml:"network"`
+	Db  Database `yaml:"database"`
 }
 
 type Network struct {
@@ -31,12 +32,13 @@ const DEFAULT_CONFIG_PATH string = "~/lesson-manager/config.json"
 
 func MustLoad() *Config {
 	cfgPath := os.Getenv("CONFIG_PATH")
+	fmt.Println(cfgPath)
 	if cfgPath == "" {
 		cfgPath = DEFAULT_CONFIG_PATH
 	}
 
 	var cfg Config
-	if err := cleanenv.ReadConfig(cfgPath, cfg); err != nil {
+	if err := cleanenv.ReadConfig(cfgPath, &cfg); err != nil {
 		log.Fatalf("cannot read config: %s. %s\n", cfgPath, err)
 	}
 

@@ -7,20 +7,24 @@ import (
 	"lesson-manager-server/internal/storage"
 	"log/slog"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 type CurrentResponse struct {
-	Lessons []LessonResponse
+	Lessons []LessonResponse `json:"lessons"`
 }
 
 func Init(db *storage.Storage, logging *slog.Logger) {
 	http.HandleFunc("/current", func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query()
+		hours, minutes, _ := time.Now().Clock()
 		rows, err := db.Db.Query(`
 	SELECT subject, time, meeting_id, password, link
 	FROM lessons
-	WHERE group_id = $1 and time >= $2+':00' and dow = $3
+	WHERE group_id = $1 and time >= $2 and dow = $3
 	LIMIT 2
-`, r.PathValue("group_id"), r.PathValue("time"), r.PathValue("dow"))
+`, query.Get("group_id"), strconv.Itoa(hours)+":"+strconv.Itoa(minutes)+":00", int(time.Now().Weekday())-1)
 		if err != nil {
 			logging.Error("internal.http.handlers.current.Init", err.Error())
 			return
@@ -28,35 +32,41 @@ func Init(db *storage.Storage, logging *slog.Logger) {
 		defer rows.Close()
 
 		l := CurrentResponse{}
-		n := 0
+		l.Lessons = []LessonResponse{}
 		for rows.Next() {
-			err = rows.Scan(&l.Lessons[n].Subject,
-				&l.Lessons[n].Time,
-				&l.Lessons[n].MeetingId,
-				&l.Lessons[n].Password,
-				&l.Lessons[n].Link,
+			var lesson LessonResponse
+			err = rows.Scan(&lesson.Subject,
+				&lesson.Time,
+				&lesson.MeetingId,
+				&lesson.Password,
+				&lesson.Link,
 			)
 			if err != nil {
 				logging.Error("Failed to parse response from database")
 			}
-			n++
+			l.Lessons = append(l.Lessons, lesson)
 		}
 
-		short := r.PathValue("short")
+		if len(l.Lessons) == 0 {
+			fmt.Fprintln(w, "No lessons were found with group_id "+query.Get("group_id"))
+			return
+		}
+
+		short := query.Get("short")
 		if short == "true" {
-			w.Header().Set("Content-Type", "text/json")
+			w.Header().Set("Content-Type", "application/json")
 			lJson, err := json.Marshal(l)
 			if err != nil {
 				logging.Error("Failed to convert CurrentResponse object to JSON")
 			}
-			_, err = fmt.Fprint(w, lJson)
+			_, err = fmt.Fprint(w, string(lJson))
 			if err != nil {
 				logging.Error("Failed to write JSON to html response body")
 			}
 		} else {
 			w.Header().Set("Content-Type", "text/html")
 			WriteLesson(w, &l, 0, false)
-			if l.Lessons[1].Link == "" {
+			if len(l.Lessons) > 1 {
 				WriteLesson(w, &l, 1, true)
 			}
 		}
@@ -68,8 +78,8 @@ func WriteLesson(w http.ResponseWriter, l *CurrentResponse, n int, isNext bool) 
 	if isNext {
 		next = "next"
 	}
-	fmt.Fprintf(w, "The %s lesson is %s\n", next, l.Lessons[n].Subject)
-	fmt.Fprintf(w, "It starts at %s", l.Lessons[n].Time)
-	fmt.Fprintf(w, "Meeting id: %s, password: %s", l.Lessons[n].MeetingId, l.Lessons[n].Password)
-	fmt.Fprintf(w, "Or you can join it with this link: %s", l.Lessons[n].Link)
+	fmt.Fprintf(w, "The %s lesson is %s<br>", next, l.Lessons[n].Subject)
+	fmt.Fprintf(w, "It starts at %s<br>", l.Lessons[n].Time)
+	fmt.Fprintf(w, "Meeting id: %s, password: %s<br>", l.Lessons[n].MeetingId, l.Lessons[n].Password)
+	fmt.Fprintf(w, "Or you can join it via this link: <a href=%s>%s<a><hr>", l.Lessons[n].Link, l.Lessons[n].Link)
 }
