@@ -9,14 +9,13 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello")
 	//load config
 	cfg := config.MustLoad()
-	fmt.Println(cfg.Db)
+	fmt.Println("Successfully loaded config")
 
 	//init logger
 	logging := app.SetupLogger(cfg)
-	logging.Info("Initialized logger")
+	logging.Info("Successfully initialized logger")
 
 	//init storage
 	db, err := app.SetupStorage(&cfg.Db)
