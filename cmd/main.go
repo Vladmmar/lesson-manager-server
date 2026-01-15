@@ -1,13 +1,15 @@
-package server
+package main
 
 import (
 	"fmt"
 	"lesson-manager-server/internal/app"
 	"lesson-manager-server/internal/config"
+	"lesson-manager-server/internal/http/handlers"
 	"net/http"
 )
 
 func main() {
+	fmt.Println("Hello")
 	//load config
 	cfg := config.MustLoad()
 
@@ -28,6 +30,7 @@ func main() {
 	//setup http server
 
 	logging.Info(fmt.Sprintf("Starting http server on port %s", cfg.Net.Port))
+	handlers.Init(db, logging)
 	err = http.ListenAndServe(fmt.Sprintf("%s:%s", cfg.Net.Host, cfg.Net.Port), nil)
 	if err != nil {
 		logging.Error(err.Error())

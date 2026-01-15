@@ -8,7 +8,7 @@ import (
 )
 
 type Config struct {
-	Env string    ``
+	Env string    `yaml:"env" env-default:"prod"`
 	Net *Network  `yaml:"network"`
 	Db  *Database `yaml:"database"`
 }
