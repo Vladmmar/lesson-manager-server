@@ -32,8 +32,11 @@ func main() {
 	//setup http server
 
 	logging.Info(fmt.Sprintf("Starting http server on port %s", cfg.Net.Port))
-	handlers.Init(db, logging)
-	err = http.ListenAndServe(fmt.Sprintf("%s:%s", cfg.Net.Host, cfg.Net.Port), nil)
+	mux := http.NewServeMux()
+	handlers.Init(db, logging, mux)
+	fmt.Println(cfg.Net.Host, cfg.Net.Port)
+	err = http.ListenAndServe(fmt.Sprintf("%s:%s", cfg.Net.Host, cfg.Net.Port), handlers.EnableCORS(mux))
+	fmt.Println("error:", err)
 	if err != nil {
 		logging.Error(err.Error())
 	} else {

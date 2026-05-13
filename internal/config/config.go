@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
@@ -28,13 +29,13 @@ type Database struct {
 	Password string `yaml:"password" env:"DB_PASSWORD" env-required:"true"`
 }
 
-const DEFAULT_CONFIG_PATH string = "~/lesson-manager/config.json"
+var DEFAULT_CONFIG_PATH string = path.Join("config", "config.json")
 
 func MustLoad() *Config {
-	cfgPath := os.Getenv("CONFIG_PATH")
+	cfgPath := os.Getenv("LESSON_MANAGER_CONFIG_PATH")
 	fmt.Println(cfgPath)
 	if cfgPath == "" {
-		cfgPath = DEFAULT_CONFIG_PATH
+		cfgPath = path.Join(DEFAULT_CONFIG_PATH)
 	}
 
 	var cfg Config
