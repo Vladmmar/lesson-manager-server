@@ -16,14 +16,18 @@ type CurrentResponse struct {
 }
 
 func Init(db *storage.Storage, logging *slog.Logger) {
-	http.HandleFunc("/current", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/current", currentHandler(db, logging))
+}
+
+func currentHandler(db *storage.Storage, logging *slog.Logger) func(http.ResponseWriter, *http.Request){
+	return func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
 		hours, minutes, _ := time.Now().Clock()
 		rows, err := db.Db.Query(`
 	SELECT subject, time, meeting_id, password, link
 	FROM lessons
 	WHERE group_id = $1 and time >= $2 and dow = $3
-	LIMIT 2
+	LIMIT 1
 `, query.Get("group_id"), strconv.Itoa(hours)+":"+strconv.Itoa(minutes)+":00", int(time.Now().Weekday())-1)
 		if err != nil {
 			logging.Error("internal.http.handlers.current.Init", err.Error())
